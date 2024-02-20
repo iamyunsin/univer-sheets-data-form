@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "private": false,
   "description": "Data form plugin for univer sheets.",
-  "author": "iamyunsin",
+  "author": "iamyunsin<yunsin@vip.qq.com>",
   "license": "Apache-2.0",
   "keywords": [
     "univerjs",
@@ -17,6 +17,12 @@
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "publishConfig": {
     "access": "public",
     "main": "./lib/cjs/index.js",
@@ -37,9 +43,6 @@
   "directories": {
     "lib": "lib"
   },
-  "files": [
-    "lib"
-  ],
   "scripts": {
     "prepare": "husky install",
     "pre-commit": "lint-staged",
