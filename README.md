@@ -12,7 +12,8 @@
     |
     <a href="./README-zh.md">简体中文</a>
 </p>
-# Data form plugin
+
+<p align="center" style="color: red">Please note: The current plug-in is still under development, welcome to communicate via Issue, email (yunsin@vip.qq.com) or WeChat (Iamyunsin) ^_^</p>
 
 The data form plug-in works in conjunction with Univer Sheets. It provides a convenient way to configure data sources and binding relationships, and organizes the data in the table into structured data based on the data sources and binding relationships to provide to back-end programs for analysis or exhibit.
 

@@ -13,7 +13,7 @@
     简体中文
 </p>
 
-# 数据表单插件
+<p align="center" style="color: red">请注意:当前插件尚在开发中，欢迎通过Issue、邮箱(yunsin@vip.qq.com)或微信(Iamyunsin)交流^_^</p>
 
 数据表单插件是与Univer Sheets协同工作的，它提供便捷的方式配置数据源和绑定关系，并根据数据源和绑定关系将表格中的数据组织成结构化数据以提供给后端程序分析或展示。
 
