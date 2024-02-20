@@ -8,10 +8,9 @@
 </p>
 
 <p align="center">
-    English
+    <a href="./README.md">English</a>
     |
-    <a href="./README-zh.md">简体中文</a>
-
+    简体中文
 </p>
 
 # 数据表单插件

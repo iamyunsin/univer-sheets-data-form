@@ -8,11 +8,10 @@
 </p>
 
 <p align="center">
-    <a href="./README.md">English</a>
+    English
     |
-    简体中文
+    <a href="./README-zh.md">简体中文</a>
 </p>
-
 # Data form plugin
 
 The data form plug-in works in conjunction with Univer Sheets. It provides a convenient way to configure data sources and binding relationships, and organizes the data in the table into structured data based on the data sources and binding relationships to provide to back-end programs for analysis or exhibit.
