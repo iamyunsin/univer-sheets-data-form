@@ -1,0 +1,27 @@
+name: 📦 Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
+
+      - name: 📦 Build
+        run: pnpm run build

@@ -1,0 +1,110 @@
+{
+  "name": "univer-sheet-data-form",
+  "type": "module",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Data form plugin for univer sheets.",
+  "author": "iamyunsin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "univerjs",
+    "data form"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/types/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "main": "./lib/cjs/index.js",
+    "module": "./lib/es/index.js",
+    "exports": {
+      ".": {
+        "import": "./lib/es/index.js",
+        "require": "./lib/cjs/index.js",
+        "types": "./lib/types/index.d.ts"
+      },
+      "./*": {
+        "import": "./lib/es/*",
+        "require": "./lib/cjs/*",
+        "types": "./lib/types/index.d.ts"
+      }
+    }
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "dev": "tsc & vite",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "build": "tsc && vite build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "peerDependencies": {
+    "@univerjs/core": "*",
+    "@univerjs/design": "*",
+    "@univerjs/ui": "*",
+    "@wendellhu/redi": ">=0.12.13",
+    "clsx": ">=2.0.0",
+    "react": ">=16.9.0",
+    "rxjs": ">=7.0.0"
+  },
+  "dependencies": {
+    "@univerjs/core": "*",
+    "@univerjs/design": "*",
+    "@univerjs/icons": "^0.1.26",
+    "@univerjs/ui": "*",
+    "@wendellhu/redi": "^0.12.13",
+    "clsx": "^2.1.0",
+    "rc-tree": "^5.8.5",
+    "react": "^18.2.0",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.6.4",
+    "@types/node": "^20.11.16",
+    "@types/react": "^18.2.54",
+    "@univerjs/core": "*",
+    "@univerjs/design": "*",
+    "@univerjs/docs": "*",
+    "@univerjs/docs-ui": "*",
+    "@univerjs/engine-formula": "*",
+    "@univerjs/engine-numfmt": "*",
+    "@univerjs/engine-render": "*",
+    "@univerjs/network": "*",
+    "@univerjs/rpc": "*",
+    "@univerjs/sheets": "*",
+    "@univerjs/sheets-formula": "*",
+    "@univerjs/sheets-numfmt": "*",
+    "@univerjs/sheets-ui": "*",
+    "@univerjs/ui": "*",
+    "@univerjs/uniscript": "*",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-istanbul": "^1.2.2",
+    "eslint": "^8.56.0",
+    "eslint-plugin-format": "^0.1.0",
+    "eslint-plugin-header": "^3.1.1",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "happy-dom": "^13.0.0",
+    "less": "^4.2.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
+    "vite-plugin-dts": "^3.7.1",
+    "vite-plugin-externals": "^0.6.2",
+    "vitest": "^1.2.1"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
