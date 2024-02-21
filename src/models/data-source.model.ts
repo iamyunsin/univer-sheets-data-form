@@ -44,6 +44,23 @@ export interface IDataSourceNode<T extends DataType> {
   key: string;
   /** 父节点 */
   parent?: ReferenceDataDefinition<ReferenceDataType, DataType> | IDataSourceNode<ReferenceDataType>;
+  children?: IDataSourceNode<DataType>[];
+}
+
+/** 类型构造，用于序列化后反序列化 */
+export function toDataDefinitions(nodes: IDataSourceNode<DataType>[] = [], parent?: ReferenceDataDefinition<ReferenceDataType, DataType>): DataDefinitionBase<DataType>[] {
+  return nodes.map((node) => {
+    const dataNode = toDataDefinition(node)!;
+    dataNode.setParent(parent);
+    if (node.children) {
+      if (!dataNode.isReference()) {
+        throw new Error(`${node.key}不是引用类型，不能有子节点`);
+      }
+      dataNode.children = node.children && toDataDefinitions(node.children, dataNode);
+    }
+
+    return dataNode;
+  });
 }
 
 function toDataDefinition<T extends DataType>(node?: IDataSourceNode<T> | IDataDefinition<T>): DataDefinitionBase<DataType> | undefined {

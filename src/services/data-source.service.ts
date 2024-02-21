@@ -17,30 +17,18 @@
 import { Disposable } from '@univerjs/core';
 import { BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import type { DataDefinitionBase, DataType, IDataDefinition, IDataSourceNode, TableColumn } from '@/models/data-source.model';
-import { createDataDefinition, DataSource, DateDefinition, NamespaceDefinition, NumberDefinition, TableDefinition, TextDefinition } from '@/models/data-source.model';
-
-const initDataNodes: IDataDefinition<DataType>[] = [
-  new TableDefinition('table', undefined),
-  new TextDefinition('text', undefined),
-  new NamespaceDefinition('namespace', undefined),
-];
-
-initDataNodes[0].children = [
-  new TextDefinition('text', initDataNodes[0] as TableDefinition),
-  new DateDefinition('date', initDataNodes[0] as TableDefinition),
-  new NumberDefinition('number', initDataNodes[0] as TableDefinition),
-];
+import { createDataDefinition, DataSource, DateDefinition, NamespaceDefinition, NumberDefinition, TableDefinition, TextDefinition, toDataDefinitions } from '@/models/data-source.model';
 
 export class DataSourceService extends Disposable {
   private _dataSource: DataSource = new DataSource();
 
-  private _dataNodes$ = new BehaviorSubject<IDataDefinition<DataType>[]>(initDataNodes);
+  private _dataNodes$ = new BehaviorSubject<IDataDefinition<DataType>[]>([]);
   dataNodes$ = this._dataNodes$.pipe(distinctUntilChanged());
 
-  constructor(dataSourceNodes: IDataDefinition<DataType>[]) {
+  constructor(dataSourceNodes?: IDataSourceNode<DataType>[]) {
     super();
     if (dataSourceNodes) {
-      this.setNodes(dataSourceNodes);
+      this.setNodes(toDataDefinitions(dataSourceNodes));
     }
   }
 

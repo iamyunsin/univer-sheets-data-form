@@ -21,7 +21,7 @@ import '@univerjs/ui/lib/index.css';
 import '@univerjs/sheets-ui/lib/index.css';
 import '@univerjs/sheets-formula/lib/index.css';
 
-import { Univer } from '@univerjs/core';
+import { LogLevel, Univer } from '@univerjs/core';
 import { defaultTheme } from '@univerjs/design';
 import { UniverDocsPlugin } from '@univerjs/docs';
 import { UniverFormulaEnginePlugin } from '@univerjs/engine-formula';
@@ -31,9 +31,11 @@ import { UniverSheetsFormulaPlugin } from '@univerjs/sheets-formula';
 import { UniverSheetsUIPlugin } from '@univerjs/sheets-ui';
 import { UniverUIPlugin } from '@univerjs/ui';
 import { UniverSheetsDataFormPlugin } from '../src';
+import { DataType } from '@/models/data-source.model';
 
 const univer = new Univer({
   theme: defaultTheme,
+  logLevel: LogLevel.VERBOSE,
 });
 
 // core plugins
@@ -61,7 +63,84 @@ univer.registerPlugin(UniverSheetsUIPlugin);
 univer.registerPlugin(UniverSheetsFormulaPlugin);
 
 univer.registerPlugin(UniverSheetsDataFormPlugin, {
-  dataSourceNodes: [],
+  dataSourceNodes: [
+    {
+      key: 'table',
+      type: DataType.Table,
+      children: [
+        {
+          key: 'col0',
+          type: DataType.Text,
+        },
+        {
+          key: 'col1',
+          type: DataType.Number,
+        },
+        {
+          key: 'col2',
+          type: DataType.Date,
+        },
+      ],
+    },
+    {
+      key: 'text',
+      type: DataType.Text,
+    },
+    {
+      key: 'namespace',
+      type: DataType.Namespace,
+      children: [
+        {
+          key: 'field0',
+          type: DataType.Text,
+        },
+        {
+          key: 'field1',
+          type: DataType.Number,
+        },
+        {
+          key: 'field2',
+          type: DataType.Date,
+        },
+        {
+          key: 'field3',
+          type: DataType.Table,
+          children: [
+            {
+              key: 'field0',
+              type: DataType.Text,
+            },
+            {
+              key: 'field1',
+              type: DataType.Number,
+            },
+            {
+              key: 'field2',
+              type: DataType.Date,
+            },
+          ],
+        },
+        {
+          key: 'field4',
+          type: DataType.Namespace,
+          children: [
+            {
+              key: 'field0',
+              type: DataType.Text,
+            },
+            {
+              key: 'field1',
+              type: DataType.Number,
+            },
+            {
+              key: 'field2',
+              type: DataType.Date,
+            },
+          ],
+        },
+      ],
+    },
+  ],
 });
 
 univer.createUniverSheet({});
