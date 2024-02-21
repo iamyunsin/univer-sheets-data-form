@@ -15,21 +15,24 @@
  */
 
 import 'rc-tree/assets/index.less';
-import React, { SyntheticEvent, memo, useState } from 'react';
+import type { SyntheticEvent } from 'react';
+import React, { memo, useState } from 'react';
 import type { TreeNodeProps } from 'rc-tree';
 import Tree from 'rc-tree';
 import { useDependency } from '@wendellhu/redi/react-bindings';
 import { Dropdown, Input, useObservable } from '@univerjs/design';
 import { ICommandService } from '@univerjs/core';
+import type { NodeDragEventParams } from 'rc-tree/lib/contextTypes';
 import { DataSourceIcon } from './DataSourceIcon';
 import { OperationIconButton } from './OperationIconButton';
 import { IconType } from './Icon';
 import styles from './index.module.less';
 import { TreeNodeContextMenu } from './DataSourceTreeContextMenu';
 import { DataType } from '@/models/data-source.model';
-import type { IDataDefinition, IDataSourceNode } from '@/models/data-source.model';
+import type { DataDefinitionBase, IDataDefinition, IDataSourceNode } from '@/models/data-source.model';
 import { DataSourceService } from '@/services/data-source.service';
 import { AddSubnodeCommand, EditCancelCommand, EditDoneCommand } from '@/commands/commands/data-source.command';
+import { DataSourceActionService } from '@/services/data-source-action.service';
 
 const preventDefault = (event: Event | SyntheticEvent) => event?.preventDefault?.();
 
@@ -41,6 +44,7 @@ export function DataSourceTree() {
   };
 
   const dataSourceService = useDependency(DataSourceService);
+  const dataSourceActionService = useDependency(DataSourceActionService);
   const commandService = useDependency(ICommandService);
 
   const dataNodes = useObservable(dataSourceService.dataNodes$, true);
@@ -58,7 +62,18 @@ export function DataSourceTree() {
     return (<DataSourceIcon type={data.type} />);
   };
 
-  const [expandKeys, setExpandKeys] = useState<React.Key[]>([]);
+  const expandKeys = useObservable(dataSourceActionService.expandKeys$, true);
+  const setExpandKeys = (keys: React.Key[]) => dataSourceActionService.setExpandKeys(keys);
+  const selectedKeys = useObservable(dataSourceActionService.selectedKeys$, true);
+  const setSelectedKeys = (keys: React.Key[]) => dataSourceActionService.setSelectedKeys(keys);
+
+  const handleDragStart = ({ event, node }: NodeDragEventParams) => {
+    const dataNode = node as unknown as { props: { data: DataDefinitionBase<DataType> } };
+    // 命名空间是不能拖动的
+    if (dataNode.props.data.isNamespace()) {
+      event.preventDefault();
+    }
+  };
 
   return (
     <>
@@ -70,11 +85,17 @@ export function DataSourceTree() {
         rootClassName="data-form-tree"
         showLine
         defaultExpandAll
+        // 展开收起
         onExpand={setExpandKeys}
         expandedKeys={expandKeys}
+        // 选中
+        onSelect={setSelectedKeys}
+        selectedKeys={selectedKeys}
+        // 右键菜单
         onContextMenu={preventDefault}
-        // selectable={false}
+        multiple={false}
         draggable={!dataSourceService.isEditing()}
+        onDragStart={handleDragStart}
         fieldNames={fieldNames}
         treeData={dataNodes}
         titleRender={titleRender}
