@@ -19,34 +19,6 @@
     .univer-input-affix-wrapper {
       overflow: unset;
     }
-    .rc-tree {
-      &-treenode {
-        margin: 2px 0;
-      }
-    }
-    &.rc-tree {
-      .rc-tree-node-content-wrapper {
-        height: auto !important;
-        .rc-tree-title {
-          .editing-node {
-            .univer-input-affix-wrapper {
-              border-top-right-radius: 0;
-              border-bottom-right-radius: 0;
-            }
-            .univer-button {
-              border-radius: 0;
-              padding: 0 8px;
-              height: 30px;
-              line-height: 30px;
-              &:last-child {
-                border-top-right-radius: var(--border-radius-base);
-                border-bottom-right-radius: var(--border-radius-base);
-              }
-            }
-          }
-        }
-      }
-    }
   }
 
   &-menu {
@@ -66,6 +38,25 @@
       & ~ .univer-menu-submenu {
         --bg-color-hover: 232, 239, 247;
       }
+    }
+  }
+}
+
+.editing-node {
+  display: flex;
+  align-items: center;
+  .univer-input-affix-wrapper {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .univer-button {
+    border-radius: 0;
+    padding: 0 8px;
+    height: 30px;
+    line-height: 30px;
+    &:last-child {
+      border-top-right-radius: var(--border-radius-base);
+      border-bottom-right-radius: var(--border-radius-base);
     }
   }
 }

@@ -37,27 +37,6 @@ export class DataSourceService extends Disposable {
     this._dataNodes$.complete();
   }
 
-  isEditing(): boolean {
-    return this._dataSource.isEditing;
-  }
-
-  changeToEditing(node: IDataDefinition<DataType>) {
-    this._setEditing(node, true);
-  }
-
-  changeToNormal(node: IDataDefinition<DataType>) {
-    this._setEditing(node, false);
-  }
-
-  private _setEditing(node: IDataDefinition<DataType>, editing: boolean) {
-    const operationList = this._getOperationList(node);
-    const index = operationList.findIndex((item) => item === node);
-    const newNode = node.clone();
-    newNode.editing = editing;
-    operationList.splice(index, 1, newNode);
-    this._notification();
-  }
-
   /**
    * 转换节点类型
    * @param node 转换类型的节点

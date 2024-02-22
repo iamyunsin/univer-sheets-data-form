@@ -20,6 +20,7 @@ import { INotificationService } from '@univerjs/ui';
 import { DataType } from '@/models/data-source.model';
 import type { IDataDefinition } from '@/models/data-source.model';
 import { DataSourceService } from '@/services/data-source.service';
+import { DataSourceActionService } from '@/services/data-source-action.service';
 
 export const RemoveDataNodeCommand: ICommand = {
   id: 'data-form.command.remove-data-node',
@@ -40,7 +41,9 @@ export const AddSubnodeCommand: ICommand = {
 
   handler: async (accessor, node: IDataDefinition<DataType>) => {
     const dataSourceService = accessor.get(DataSourceService);
-    dataSourceService.addNode({ key: '', type: DataType.Text }, node);
+    const dataSourceActionService = accessor.get(DataSourceActionService);
+    const newNode = dataSourceService.addNode({ key: '', type: DataType.Text }, node);
+    dataSourceActionService.changeToEditing(newNode);
     return true;
   },
 };
@@ -81,6 +84,7 @@ export const EditDoneCommand: ICommand = {
 
   handler: async (accessor, { node, newVal }: IEditDoneCommandParams) => {
     const dataSourceService = accessor.get(DataSourceService);
+    const dataSourceActionService = accessor.get(DataSourceActionService);
     const notificationService = accessor.get(INotificationService);
 
     if (!newVal) {
@@ -100,8 +104,7 @@ export const EditDoneCommand: ICommand = {
       });
       return false;
     }
-    node.key = newVal;
-    dataSourceService.changeToNormal(node);
+    dataSourceActionService.editDone(node, newVal);
     return true;
   },
 };
@@ -113,7 +116,8 @@ export const EditCancelCommand: ICommand = {
 
   handler: async (accessor, node: IDataDefinition<DataType>) => {
     const dataSourceService = accessor.get(DataSourceService);
-    dataSourceService.changeToNormal(node);
+    const dataSourceActionService = accessor.get(DataSourceActionService);
+    dataSourceActionService.changeToNormal();
     if (!node.key) {
       dataSourceService.removeNode(node);
     }

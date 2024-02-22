@@ -65,11 +65,11 @@ export function toDataDefinitions(nodes: IDataSourceNode<DataType>[] = [], paren
 
 function toDataDefinition<T extends DataType>(node?: IDataSourceNode<T> | IDataDefinition<T>): DataDefinitionBase<DataType> | undefined {
   if (!node) return undefined;
-  return node instanceof DataDefinitionBase ? node : createDataDefinition(node, false);
+  return node instanceof DataDefinitionBase ? node : createDataDefinition(node);
 }
 
 /** 根据IDataSourceNode数据声明，创建数据定义实例 */
-export function createDataDefinition<T extends DataType>(node: IDataSourceNode<T>, editing = true): DataDefinitionBase<DataType> {
+export function createDataDefinition<T extends DataType>(node: IDataSourceNode<T>): DataDefinitionBase<DataType> {
   let dataDefinition: DataDefinitionBase<DataType>;
   const parentNode = toDataDefinition(node.parent) as ReferenceDataDefinition<ReferenceDataType, DataType>;
 
@@ -92,20 +92,18 @@ export function createDataDefinition<T extends DataType>(node: IDataSourceNode<T
     default:
       throw new Error(`Unsupported data type: ${node.type}`);
   }
-  dataDefinition.editing = editing;
   return dataDefinition;
 }
 
 /** 数据定义接口 */
 export interface IDataDefinition<T extends DataType> {
+  id: string;
+
   /** 数据类型 */
   type: T;
 
   /** 类型键，同级唯一 */
   key: string;
-
-  /** 是否正在编辑 */
-  editing?: boolean;
 
   /** 路径 */
   path: string[];
@@ -128,14 +126,16 @@ export interface IDataDefinition<T extends DataType> {
   clone(): IDataDefinition<DataType>;
 }
 
+let idSeq = 1;
+
 /** 数据类型基类 */
 export abstract class DataDefinitionBase<T extends DataType> implements IDataDefinition<DataType> {
+  id: string;
   /** 数据类型 */
   type: T;
   /** 类型键，同级唯一 */
   key: string;
-  /** 是否正在编辑 */
-  editing?: boolean;
+
   /** 当前节点的父节点 */
   parent?: ReferenceDataDefinition<ReferenceDataType, DataType>;
 
@@ -147,6 +147,7 @@ export abstract class DataDefinitionBase<T extends DataType> implements IDataDef
   pathString: string = '';
 
   constructor(props: IDataSourceNode<T>) {
+    this.id = `${idSeq++}`;
     this.type = props.type;
     this.key = props.key;
     this.setParent(toDataDefinition(props.parent) as ReferenceDataDefinition<ReferenceDataType, DataType>);
@@ -325,20 +326,10 @@ export class DataSource {
 
   setNodes(nodes: IDataDefinition<DataType>[]) {
     this.nodes = nodes;
-    this.isEditing = this._getIsEditing();
   }
 
   getNodes(): IDataDefinition<DataType>[] {
     return this.nodes;
-  }
-
-  private _getIsEditing() {
-    const hasEditing = (nodes: IDataDefinition<DataType>[]) => {
-      return nodes.some((node): boolean => {
-        return node.editing || (node.isReference() && hasEditing(node.children));
-      });
-    };
-    return hasEditing(this.nodes);
   }
 
   private _getNode(

@@ -60,18 +60,27 @@
     "@univerjs/ui": "*",
     "@wendellhu/redi": ">=0.12.13",
     "clsx": ">=2.0.0",
+    "dnd-core": "^14.0.1",
     "react": ">=16.9.0",
+    "react-arborist": "^3.4.0",
+    "react-dnd": "^14.0.5",
+    "react-dnd-html5-backend": "^14.1.0",
     "rxjs": ">=7.0.0"
   },
   "dependencies": {
+    "@types/react-dom": "^18.2.19",
     "@univerjs/core": "*",
     "@univerjs/design": "*",
     "@univerjs/icons": "^0.1.26",
     "@univerjs/ui": "*",
     "@wendellhu/redi": "^0.12.13",
     "clsx": "^2.1.0",
-    "rc-tree": "^5.8.5",
+    "dnd-core": "^14.0.1",
     "react": "^18.2.0",
+    "react-arborist": "^3.4.0",
+    "react-dnd": "^14.0.5",
+    "react-dnd-html5-backend": "^14.1.0",
+    "react-dom": "^18.2.0",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {

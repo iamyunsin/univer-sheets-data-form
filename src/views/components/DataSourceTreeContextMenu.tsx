@@ -21,7 +21,8 @@ import { ICommandService, LocaleService } from '@univerjs/core';
 import { Menu, MenuItem, MenuItemGroup, SubMenu } from '@univerjs/design';
 import { MoreSingle } from '@univerjs/icons';
 import { Icon, IconType } from './Icon';
-import { DataSourceService } from '@/services/data-source.service';
+
+// import { DataSourceService } from '@/services/data-source.service';
 import { EditDataOperation } from '@/commands/operations/data-source.operation';
 import { DataType } from '@/models/data-source.model';
 import type { IDataDefinition } from '@/models/data-source.model';
@@ -165,7 +166,7 @@ export function TreeNodeContextMenu(
 
   const localeService = useDependency(LocaleService);
   const commandService = useDependency(ICommandService);
-  const dataSourceService = useDependency(DataSourceService);
+  // const dataSourceService = useDependency(DataSourceService);
 
   // table的列不能是表格和命名空间
   const currentSwitchTypeMenu = data.parent?.isTable()
@@ -186,11 +187,11 @@ export function TreeNodeContextMenu(
     currentSwitchTypeMenu,
   ];
 
-  if (dataSourceService.isEditing()) {
-    currentTreeNodeMenuGroups[0].shift();
-    // currentTreeNodeMenuGroups[1] = [];
-    currentTreeNodeMenuGroups.splice(1, 1);
-  }
+  // if (dataSourceService.isEditing()) {
+  //   currentTreeNodeMenuGroups[0].shift();
+  //   // currentTreeNodeMenuGroups[1] = [];
+  //   currentTreeNodeMenuGroups.splice(1, 1);
+  // }
 
   const handleMenuClick = (menu: ITreeNodeMenu) => {
     if (menu.onClick) {
