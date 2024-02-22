@@ -17,7 +17,7 @@
 import { Disposable } from '@univerjs/core';
 import { BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import type { DataDefinitionBase, DataType, IDataDefinition, IDataSourceNode, TableColumn } from '@/models/data-source.model';
-import { createDataDefinition, DataSource, DateDefinition, NamespaceDefinition, NumberDefinition, TableDefinition, TextDefinition, toDataDefinitions } from '@/models/data-source.model';
+import { createDataDefinition, DataSource, toDataDefinitions } from '@/models/data-source.model';
 
 export class DataSourceService extends Disposable {
   private _dataSource: DataSource = new DataSource();

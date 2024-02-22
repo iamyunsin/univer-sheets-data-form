@@ -22,17 +22,32 @@ export class DataSourceActionService extends Disposable {
   private _expandKeys: React.Key[] = [];
   private _expandKeys$ = new BehaviorSubject<React.Key[]>(this._expandKeys);
   expandKeys$ = this._expandKeys$;
+  setExpandKeys(keys: React.Key[]) {
+    this._expandKeys$.next(keys);
+  }
 
   // 选中的节点
   private _selectedKeys: React.Key[] = [];
   private _selectedKeys$ = new BehaviorSubject<React.Key[]>(this._selectedKeys);
   selectedKeys$ = this._selectedKeys$;
-
-  setExpandKeys(keys: React.Key[]) {
-    this._expandKeys$.next(keys);
-  }
-
   setSelectedKeys(keys: React.Key[]) {
     this._selectedKeys$.next(keys);
+  }
+
+  // 拖拽
+  onDragStart() {
+    window.addEventListener('mousemove', this.onDragOver);
+  }
+
+  // 结束拖拽
+  onDragEnd() {
+    window.removeEventListener('mousemove', this.onDragOver);
+  }
+
+  allowDrop() {
+    return false;
+  }
+
+  onDragOver() {
   }
 }

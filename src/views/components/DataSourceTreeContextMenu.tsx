@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import React, { SyntheticEvent } from 'react';
+import type { SyntheticEvent } from 'react';
+import React from 'react';
 import { useDependency } from '@wendellhu/redi/react-bindings';
 import { ICommandService, LocaleService } from '@univerjs/core';
 import { Menu, MenuItem, MenuItemGroup, SubMenu } from '@univerjs/design';
