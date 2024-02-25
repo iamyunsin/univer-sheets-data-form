@@ -154,6 +154,19 @@ interface IMoveNodeCommandParams {
   index: number;
 };
 
+function getDuplicateNode(nodes: IDataNode[]) {
+  if (nodes.length < 2) return false;
+
+  for (let i = 0; i < nodes.length; i++) {
+    const duplicateNode: IDataNode<DataType> | undefined = nodes.slice(i + 1).find((item) => item.name === nodes[i].name);
+    if (duplicateNode) {
+      return duplicateNode;
+    }
+  }
+
+  return false;
+}
+
 export const MoveNodeCommand: ICommand = {
   id: 'data-form.command.move-node',
   type: CommandType.COMMAND,
@@ -161,7 +174,18 @@ export const MoveNodeCommand: ICommand = {
   handler: async (accessor, { parent, moveNodes, index }: IMoveNodeCommandParams) => {
     const dataSourceService = accessor.get(DataSourceService);
     const notificationService = accessor.get(INotificationService);
-    const duplicateNode = dataSourceService.getMoveDuplicate(moveNodes, parent);
+    let duplicateNode = dataSourceService.getMoveDuplicate(moveNodes, parent);
+    if (duplicateNode) {
+      notificationService.show({
+        type: 'error',
+        title: '提示',
+        content: `移动节点失败，存在同名节点 [${duplicateNode.name}]`,
+      });
+      return false;
+    }
+
+    duplicateNode = getDuplicateNode(moveNodes);
+
     if (duplicateNode) {
       notificationService.show({
         type: 'error',
