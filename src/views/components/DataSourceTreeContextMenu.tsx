@@ -20,12 +20,14 @@ import { useDependency } from '@wendellhu/redi/react-bindings';
 import { ICommandService, LocaleService } from '@univerjs/core';
 import { Menu, MenuItem, MenuItemGroup, SubMenu } from '@univerjs/design';
 import { MoreSingle } from '@univerjs/icons';
+import { useTreeApi } from 'react-arborist/dist/module/context';
+import type { TreeApi } from 'react-arborist';
 import { Icon, IconType } from './Icon';
 
 // import { DataSourceService } from '@/services/data-source.service';
 import { EditDataOperation } from '@/commands/operations/data-source.operation';
-import { DataType } from '@/models/data-source.model';
-import type { IDataDefinition } from '@/models/data-source.model';
+import type { IDataNode } from '@/models/data-source.model';
+import { DataType, isNamespace, isTable } from '@/models/data-source.model';
 import {
   AddNextSiblingNodeCommand,
   AddPreviousSiblingNodeCommand,
@@ -43,8 +45,9 @@ interface ITreeNodeMenu {
   children?: ITreeNodeMenu[];
   shortcut?: string;
   onClick?: (
-    node: IDataDefinition<DataType>,
-    commandService: ICommandService
+    node: IDataNode,
+    commandService: ICommandService,
+    tree: TreeApi<IDataNode>,
   ) => void;
 }
 
@@ -57,9 +60,10 @@ const switchTypeMenu: ITreeNodeMenu[] = [
       {
         icon: <Icon type={IconType.Namespace} />,
         label: 'data-source-panel.type.namespace',
-        onClick: (node: IDataDefinition<DataType>, commandService) => {
+        onClick: (node: IDataNode, commandService, tree) => {
           commandService.executeCommand(SwitchNodeTypeCommand.id, {
             node,
+            tree,
             newType: DataType.Namespace,
           });
         },
@@ -67,9 +71,10 @@ const switchTypeMenu: ITreeNodeMenu[] = [
       {
         icon: <Icon type={IconType.Table} />,
         label: 'data-source-panel.type.table',
-        onClick: (node: IDataDefinition<DataType>, commandService) => {
+        onClick: (node: IDataNode, commandService, tree) => {
           commandService.executeCommand(SwitchNodeTypeCommand.id, {
             node,
+            tree,
             newType: DataType.Table,
           });
         },
@@ -77,9 +82,10 @@ const switchTypeMenu: ITreeNodeMenu[] = [
       {
         icon: <Icon type={IconType.Text} />,
         label: 'data-source-panel.type.text',
-        onClick: (node: IDataDefinition<DataType>, commandService) => {
+        onClick: (node: IDataNode, commandService, tree) => {
           commandService.executeCommand(SwitchNodeTypeCommand.id, {
             node,
+            tree,
             newType: DataType.Text,
           });
         },
@@ -87,9 +93,10 @@ const switchTypeMenu: ITreeNodeMenu[] = [
       {
         icon: <Icon type={IconType.Number} />,
         label: 'data-source-panel.type.number',
-        onClick: (node: IDataDefinition<DataType>, commandService) => {
+        onClick: (node: IDataNode, commandService, tree) => {
           commandService.executeCommand(SwitchNodeTypeCommand.id, {
             node,
+            tree,
             newType: DataType.Number,
           });
         },
@@ -97,9 +104,10 @@ const switchTypeMenu: ITreeNodeMenu[] = [
       {
         icon: <Icon type={IconType.Date} />,
         label: 'data-source-panel.type.date',
-        onClick: (node: IDataDefinition<DataType>, commandService) => {
+        onClick: (node: IDataNode, commandService, tree) => {
           commandService.executeCommand(SwitchNodeTypeCommand.id, {
             node,
+            tree,
             newType: DataType.Date,
           });
         },
@@ -156,20 +164,21 @@ const namespaceNodeMenus: ITreeNodeMenu[] = [
 ];
 
 export interface ITreeNodeContextMenuProps {
-  data: IDataDefinition<DataType>;
+  data: IDataNode;
 }
 
 export function TreeNodeContextMenu(
   props: ITreeNodeContextMenuProps & { onMenuClick: () => void }
 ) {
   const { data } = props;
+  const tree = useTreeApi<IDataNode>();
 
   const localeService = useDependency(LocaleService);
   const commandService = useDependency(ICommandService);
   // const dataSourceService = useDependency(DataSourceService);
 
   // table的列不能是表格和命名空间
-  const currentSwitchTypeMenu = data.parent?.isTable()
+  const currentSwitchTypeMenu = isTable(data.parent)
     ? [
       {
         ...switchTypeMenu[0],
@@ -181,23 +190,17 @@ export function TreeNodeContextMenu(
   const currentTreeNodeMenuGroups = [
     [...multiSelfMenus],
     [
-      ...(data.isTable() ? tableNodeMenus : data.isNamespace() ? namespaceNodeMenus : []),
+      ...(isTable(data) ? tableNodeMenus : isNamespace(data) ? namespaceNodeMenus : []),
       ...siblingsOperationMenu,
     ],
     currentSwitchTypeMenu,
   ];
 
-  // if (dataSourceService.isEditing()) {
-  //   currentTreeNodeMenuGroups[0].shift();
-  //   // currentTreeNodeMenuGroups[1] = [];
-  //   currentTreeNodeMenuGroups.splice(1, 1);
-  // }
-
   const handleMenuClick = (menu: ITreeNodeMenu) => {
     if (menu.onClick) {
-      menu.onClick(data, commandService);
+      menu.onClick(data, commandService, tree);
     } else if (menu.key) {
-      commandService.executeCommand(menu.key, data);
+      commandService.executeCommand(menu.key, { node: data, tree });
     }
     props.onMenuClick?.();
   };

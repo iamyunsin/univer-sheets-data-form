@@ -22,7 +22,7 @@ import { EditDataOperation, ToggleDataSourcePanelOperation } from '../commands/o
 import { DataFormMenuItemFactory } from './data-form.menu';
 import { DataSourceSettingPanel, DataSourceSettingPanelName } from '@/views/components/DataSourceSettingsPanel';
 import { MenuIcon } from '@/views/components/MenuIcon';
-import { AddNextSiblingNodeCommand, AddPreviousSiblingNodeCommand, AddSubnodeCommand, EditCancelCommand, EditDoneCommand, RemoveDataNodeCommand, SwitchNodeTypeCommand } from '@/commands/commands/data-source.command';
+import { AddNextSiblingNodeCommand, AddPreviousSiblingNodeCommand, AddSubnodeCommand, EditCancelCommand, EditDoneCommand, MoveNodeCommand, RemoveDataNodeCommand, SwitchNodeTypeCommand } from '@/commands/commands/data-source.command';
 
 @OnLifecycle(LifecycleStages.Steady, DataSourceController)
 export class DataSourceController extends Disposable {
@@ -46,5 +46,6 @@ export class DataSourceController extends Disposable {
     this.disposeWithMe(commandService.registerCommand(AddPreviousSiblingNodeCommand));
     this.disposeWithMe(commandService.registerCommand(AddNextSiblingNodeCommand));
     this.disposeWithMe(commandService.registerCommand(SwitchNodeTypeCommand));
+    this.disposeWithMe(commandService.registerCommand(MoveNodeCommand));
   }
 }

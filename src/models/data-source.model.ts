@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/** 数据类型 */
 export enum DataType {
   /** 命名空间 */
   Namespace,
@@ -36,329 +37,117 @@ export type TableColumn = DataType.Text | DataType.Date | DataType.Number;
 /** 引用数据类型，表格/命名空间，能容纳字节点的类型 */
 export type ReferenceDataType = DataType.Table | DataType.Namespace;
 
+export type Name = string;
+
 /** 数据源节点定义 */
-export interface IDataSourceNode<T extends DataType> {
+export interface IDataNode<T extends DataType = DataType> {
+  id?: string;
   /** 节点类型 */
   type: T;
   /** 类型键，同级唯一 */
-  key: string;
+  name: Name;
   /** 父节点 */
-  parent?: ReferenceDataDefinition<ReferenceDataType, DataType> | IDataSourceNode<ReferenceDataType>;
-  children?: IDataSourceNode<DataType>[];
+  parent?: IDataNode<ReferenceDataType>;
+  /** 子节点列表 */
+  children?: IDataNode<DataType>[];
 }
 
-/** 类型构造，用于序列化后反序列化 */
-export function toDataDefinitions(nodes: IDataSourceNode<DataType>[] = [], parent?: ReferenceDataDefinition<ReferenceDataType, DataType>): DataDefinitionBase<DataType>[] {
-  return nodes.map((node) => {
-    const dataNode = toDataDefinition(node)!;
-    dataNode.setParent(parent);
-    if (node.children) {
-      if (!dataNode.isReference()) {
-        throw new Error(`${node.key}不是引用类型，不能有子节点`);
-      }
-      dataNode.children = node.children && toDataDefinitions(node.children, dataNode);
-    }
+export interface IDataSource {
+  getNodes: () => IDataNode[];
+  setNodes: (nodes: IDataNode[]) => void;
+}
 
-    return dataNode;
+/** 数据源 */
+export class DataSource implements IDataSource {
+  private _nodes: IDataNode[];
+
+  constructor(nodes: IDataNode[] = []) {
+    this._nodes = sutureNodes(nodes);
+  }
+
+  setNodes(nodes: IDataNode[]): void {
+    this._nodes = nodes;
+  }
+
+  getNodes(): IDataNode[] {
+    return this._nodes;
+  }
+
+  toJSON() {
+    return this._nodes;
+  }
+}
+
+let nodeSeq = 1;
+
+/**
+ * suture the data node
+ * @param node The data node
+ * @returns filled data node
+ */
+export function sutureNode(node: IDataNode, parent?: IDataNode, forceSetId = false): IDataNode {
+  if (forceSetId) {
+    node.id = `N${nodeSeq++}`;
+  } else if (!node.id) {
+    node.id = `N${nodeSeq++}`;
+  }
+
+  if (!isReference(node)) {
+    node.children = undefined;
+  } else if (!haveChildren(node)) {
+    node.children = [];
+  }
+
+  if (!parent || isReference(parent)) {
+    node.parent = parent;
+  }
+
+  return node;
+}
+
+/**
+ * recursion suture the data node
+ * @param nodes
+ * @returns filled data node
+ */
+function sutureNodes(nodes: IDataNode[], parent?: IDataNode): IDataNode[] {
+  return nodes.map((node) => {
+    node = sutureNode(node, parent, true);
+    isReference(node) && (node.children = sutureNodes(node.children!, node));
+    return node;
   });
 }
 
-function toDataDefinition<T extends DataType>(node?: IDataSourceNode<T> | IDataDefinition<T>): DataDefinitionBase<DataType> | undefined {
-  if (!node) return undefined;
-  return node instanceof DataDefinitionBase ? node : createDataDefinition(node);
+export function isReference(node?: IDataNode): node is IDataNode<ReferenceDataType> {
+  return !!node && (node.type === DataType.Namespace || node.type === DataType.Table);
 }
 
-/** 根据IDataSourceNode数据声明，创建数据定义实例 */
-export function createDataDefinition<T extends DataType>(node: IDataSourceNode<T>): DataDefinitionBase<DataType> {
-  let dataDefinition: DataDefinitionBase<DataType>;
-  const parentNode = toDataDefinition(node.parent) as ReferenceDataDefinition<ReferenceDataType, DataType>;
-
-  switch (node.type) {
-    case DataType.Namespace:
-      dataDefinition = new NamespaceDefinition(node.key, parentNode);
-      break;
-    case DataType.Table:
-      dataDefinition = new TableDefinition(node.key, parentNode);
-      break;
-    case DataType.Text:
-      dataDefinition = new TextDefinition(node.key, parentNode);
-      break;
-    case DataType.Date:
-      dataDefinition = new DateDefinition(node.key, parentNode);
-      break;
-    case DataType.Number:
-      dataDefinition = new NumberDefinition(node.key, parentNode);
-      break;
-    default:
-      throw new Error(`Unsupported data type: ${node.type}`);
-  }
-  return dataDefinition;
+export function isTable(node?: IDataNode): node is IDataNode<DataType.Table> {
+  return !!node && node.type === DataType.Table;
 }
 
-/** 数据定义接口 */
-export interface IDataDefinition<T extends DataType> {
-  id: string;
-
-  /** 数据类型 */
-  type: T;
-
-  /** 类型键，同级唯一 */
-  key: string;
-
-  /** 路径 */
-  path: string[];
-
-  /** 当前节点的父节点 */
-  parent?: ReferenceDataDefinition<ReferenceDataType, DataType>;
-
-  children?: IDataDefinition<DataType>[];
-
-  isReference(): this is ReferenceDataDefinition<ReferenceDataType, DataType>;
-  isTable(): this is TableDefinition;
-  isNamespace(): this is NamespaceDefinition;
-
-  getChildren(): IDataDefinition<DataType>[];
-
-  /** 深拷贝，会执行当前节点及其子节点的深拷贝 */
-  deepClone(): IDataDefinition<DataType>;
-
-  /** 仅拷贝当前这一层，其子节点不会被拷贝 */
-  clone(): IDataDefinition<DataType>;
+export function isReferenceType(type: DataType): type is ReferenceDataType {
+  return type === DataType.Namespace || type === DataType.Table;
 }
 
-let idSeq = 1;
+export function isNamespace(node?: IDataNode): node is IDataNode<DataType.Namespace> {
+  return !!node && node.type === DataType.Namespace;
+}
 
-/** 数据类型基类 */
-export abstract class DataDefinitionBase<T extends DataType> implements IDataDefinition<DataType> {
-  id: string;
-  /** 数据类型 */
-  type: T;
-  /** 类型键，同级唯一 */
-  key: string;
+export function haveChildren(node: IDataNode): boolean {
+  return !!node.children && node.children.length > 0;
+}
 
-  /** 当前节点的父节点 */
-  parent?: ReferenceDataDefinition<ReferenceDataType, DataType>;
-
-  children?: DataDefinitionBase<DataType>[];
-
-  /** 路径 */
-  path: string[] = [];
-
-  pathString: string = '';
-
-  constructor(props: IDataSourceNode<T>) {
-    this.id = `${idSeq++}`;
-    this.type = props.type;
-    this.key = props.key;
-    this.setParent(toDataDefinition(props.parent) as ReferenceDataDefinition<ReferenceDataType, DataType>);
+export function setParent(node: IDataNode, parent?: IDataNode): void {
+  if (node.parent && node.parent !== parent) {
+    node.parent.children = node.parent.children?.filter((child) => child.id !== node.id);
   }
 
-  setParent(parent?: ReferenceDataDefinition<ReferenceDataType, DataType>) {
-    this.parent = parent;
-    this.path = this._path;
-    this.pathString = this.path.join('.');
-  }
-
-  getChildren(): IDataDefinition<DataType>[] {
-    return this.children || [];
-  }
-
-  getParent(): DataDefinitionBase<ReferenceDataType> | undefined {
-    return this.parent;
-  }
-
-  get _path(): string[] {
-    if (!this.parent) return [this.key];
-    return [...this.parent?.path, this.key];
-  }
-
-  isReference(): this is ReferenceDataDefinition<ReferenceDataType, DataType> {
-    return this.type === DataType.Table || this.type === DataType.Namespace;
-  }
-
-  isNamespace(): this is NamespaceDefinition {
-    return this.type === DataType.Namespace;
-  }
-
-  isTable(): this is TableDefinition {
-    return this.type === DataType.Table;
-  }
-
-  isText(): this is TextDefinition {
-    return this.type === DataType.Text;
-  }
-
-  isDate(): this is DateDefinition {
-    return this.type === DataType.Date;
-  }
-
-  isNumber(): this is NumberDefinition {
-    return this.type === DataType.Number;
-  }
-
-  deepClone(): IDataDefinition<DataType> {
-    const clonedInstance = {
-      ...this,
-    };
-    clonedInstance.children = this.children?.map((c) => c.deepClone()) as DataDefinitionBase<DataType>[];
-    Object.setPrototypeOf(clonedInstance, Object.getPrototypeOf(this));
-    return clonedInstance;
-  }
-
-  clone(): IDataDefinition<DataType> {
-    const clonedInstance = {
-      ...this,
-    };
-    Object.setPrototypeOf(clonedInstance, Object.getPrototypeOf(this));
-    return clonedInstance;
-  }
-
-  toJSON() {
-    return {
-      type: this.type,
-      key: this.key,
-      path: this.path,
-    };
+  if (!parent || isReference(parent)) {
+    node.parent = parent;
   }
 }
 
-export abstract class ReferenceDataDefinition<T extends ReferenceDataType, R extends DataType> extends DataDefinitionBase<T> {
-  override children: DataDefinitionBase<R>[] = [];
-
-  constructor(props: IDataSourceNode<T>) {
-    super(props);
-  }
-
-  addChild(child: DataDefinitionBase<R>) {
-    if (child.parent) {
-      child.parent.removeChild(child);
-    }
-    child.setParent(this);
-    this.children.push(child);
-  }
-
-  getChildren(): DataDefinitionBase<R>[] {
-    return [...this.children];
-  }
-
-  removeChild(child: DataDefinitionBase<R>) {
-    const index = this.children.indexOf(child);
-    if (index !== -1) {
-      child.setParent(undefined);
-      this.children.splice(index, 1);
-    }
-  }
-
-  override toJSON() {
-    return {
-      ...super.toJSON(),
-      children: [...this.children],
-    };
-  }
-}
-
-/** 表格数据定义 */
-export class TableDefinition extends ReferenceDataDefinition<DataType.Table, TableColumn> {
-  constructor(
-    key: string,
-    parent?: ReferenceDataDefinition<ReferenceDataType, DataType>
-  ) {
-    super({ type: DataType.Table, key, parent });
-  }
-
-  addColumn(column: DataDefinitionBase<TableColumn>) {
-    return super.addChild(column);
-  }
-
-  removeColumn(column: DataDefinitionBase<TableColumn>) {
-    return super.removeChild(column);
-  }
-
-  getColumns(): DataDefinitionBase<TableColumn>[] {
-    return super.getChildren();
-  }
-}
-
-export class NamespaceDefinition extends ReferenceDataDefinition<DataType.Namespace, DataType> {
-  constructor(key: string, parent?: ReferenceDataDefinition<ReferenceDataType, DataType>) {
-    super({ type: DataType.Namespace, key, parent });
-  }
-
-  addField(field: DataDefinitionBase<DataType>) {
-    return this.addChild(field);
-  }
-
-  removeField(field: DataDefinitionBase<DataType>) {
-    return this.removeChild(field);
-  }
-
-  getFields(): DataDefinitionBase<DataType>[] {
-    return this.getChildren();
-  }
-}
-
-export class TextDefinition extends DataDefinitionBase<DataType.Text> {
-  constructor(key: string, parent?: ReferenceDataDefinition<ReferenceDataType, DataType>) {
-    super({ type: DataType.Text, key, parent });
-  }
-}
-
-export class DateDefinition extends DataDefinitionBase<DataType.Date> {
-  constructor(key: string, parent?: ReferenceDataDefinition<ReferenceDataType, DataType>) {
-    super({ type: DataType.Date, key, parent });
-  }
-}
-
-export class NumberDefinition extends DataDefinitionBase<DataType.Number> {
-  constructor(key: string, parent?: ReferenceDataDefinition<ReferenceDataType, DataType>) {
-    super({ type: DataType.Number, key, parent });
-  }
-}
-
-export class DataSource {
-  nodes: IDataDefinition<DataType>[] = [];
-
-  isEditing: boolean = false;
-
-  constructor(nodes: IDataDefinition<DataType>[] = []) {
-    this.setNodes(nodes);
-  }
-
-  setNodes(nodes: IDataDefinition<DataType>[]) {
-    this.nodes = nodes;
-  }
-
-  getNodes(): IDataDefinition<DataType>[] {
-    return this.nodes;
-  }
-
-  private _getNode(
-    nodes: IDataDefinition<DataType>[],
-    path: string[]
-  ): IDataDefinition<DataType> | undefined {
-    const node = nodes.find((n) => n.key === path[0]);
-
-    if (path.length === 1) {
-      return node;
-    }
-
-    if (!node?.isReference()) {
-      return undefined;
-    }
-
-    const children = node.getChildren();
-    if (children.length && path.length > 1) {
-      return this._getNode(children, path.slice(1));
-    }
-
-    return undefined;
-  }
-
-  getNode(path: string[]): IDataDefinition<DataType> | undefined {
-    return this._getNode(this.nodes, path);
-  }
-
-  toJSON() {
-    return this.nodes;
-  }
+export function getPath(node: IDataNode): Name[] {
+  return node.parent ? [...getPath(node.parent), node.name] : [node.name];
 }

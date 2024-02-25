@@ -63,77 +63,77 @@ univer.registerPlugin(UniverSheetsUIPlugin);
 univer.registerPlugin(UniverSheetsFormulaPlugin);
 
 univer.registerPlugin(UniverSheetsDataFormPlugin, {
-  dataSourceNodes: [
+  dataSource: [
     {
-      key: 'table',
+      name: 'table',
       type: DataType.Table,
       children: [
         {
-          key: 'col0',
+          name: 'col0',
           type: DataType.Text,
         },
         {
-          key: 'col1',
+          name: 'col1',
           type: DataType.Number,
         },
         {
-          key: 'col2',
+          name: 'col2',
           type: DataType.Date,
         },
       ],
     },
     {
-      key: 'text',
+      name: 'text',
       type: DataType.Text,
     },
     {
-      key: 'namespace',
+      name: 'namespace',
       type: DataType.Namespace,
       children: [
         {
-          key: 'field0',
+          name: 'field0',
           type: DataType.Text,
         },
         {
-          key: 'field1',
+          name: 'field1',
           type: DataType.Number,
         },
         {
-          key: 'field2',
+          name: 'field2',
           type: DataType.Date,
         },
         {
-          key: 'field3',
+          name: 'field3',
           type: DataType.Table,
           children: [
             {
-              key: 'field0',
+              name: 'field0',
               type: DataType.Text,
             },
             {
-              key: 'field1',
+              name: 'field1',
               type: DataType.Number,
             },
             {
-              key: 'field2',
+              name: 'field2',
               type: DataType.Date,
             },
           ],
         },
         {
-          key: 'field4',
+          name: 'field4',
           type: DataType.Namespace,
           children: [
             {
-              key: 'field0',
+              name: 'field0',
               type: DataType.Text,
             },
             {
-              key: 'field1',
+              name: 'field1',
               type: DataType.Number,
             },
             {
-              key: 'field2',
+              name: 'field2',
               type: DataType.Date,
             },
           ],

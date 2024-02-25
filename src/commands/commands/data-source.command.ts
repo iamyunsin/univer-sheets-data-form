@@ -17,17 +17,18 @@
 import type { ICommand } from '@univerjs/core';
 import { CommandType } from '@univerjs/core';
 import { INotificationService } from '@univerjs/ui';
+import type { TreeApi } from 'react-arborist';
 import { DataType } from '@/models/data-source.model';
-import type { IDataDefinition } from '@/models/data-source.model';
+import type { IDataNode, ReferenceDataType } from '@/models/data-source.model';
 import { DataSourceService } from '@/services/data-source.service';
-import { DataSourceActionService } from '@/services/data-source-action.service';
+import type { IMenuCommandOperation } from '@/common/types';
 
 export const RemoveDataNodeCommand: ICommand = {
   id: 'data-form.command.remove-data-node',
 
   type: CommandType.COMMAND,
 
-  handler: async (accessor, node: IDataDefinition<DataType>) => {
+  handler: async (accessor, { node }: IMenuCommandOperation) => {
     const dataSourceService = accessor.get(DataSourceService);
     dataSourceService.removeNode(node);
     return true;
@@ -39,11 +40,10 @@ export const AddSubnodeCommand: ICommand = {
 
   type: CommandType.COMMAND,
 
-  handler: async (accessor, node: IDataDefinition<DataType>) => {
+  handler: async (accessor, { node, tree }: IMenuCommandOperation) => {
     const dataSourceService = accessor.get(DataSourceService);
-    const dataSourceActionService = accessor.get(DataSourceActionService);
-    const newNode = dataSourceService.addNode({ key: '', type: DataType.Text }, node);
-    dataSourceActionService.changeToEditing(newNode);
+    const newNode = dataSourceService.addNode({ name: '', type: DataType.Text }, node);
+    tree.edit(newNode.id!);
     return true;
   },
 };
@@ -53,9 +53,10 @@ export const AddPreviousSiblingNodeCommand: ICommand = {
 
   type: CommandType.COMMAND,
 
-  handler: async (accessor, node: IDataDefinition<DataType>) => {
+  handler: async (accessor, { node, tree }: IMenuCommandOperation) => {
     const dataSourceService = accessor.get(DataSourceService);
-    dataSourceService.addNode({ key: '', type: DataType.Text }, node.parent, node, 'before');
+    const newNode = dataSourceService.addNode({ name: '', type: DataType.Text }, node.parent, node, 'before');
+    tree?.edit(newNode.id!);
     return true;
   },
 };
@@ -65,16 +66,18 @@ export const AddNextSiblingNodeCommand: ICommand = {
 
   type: CommandType.COMMAND,
 
-  handler: async (accessor, node: IDataDefinition<DataType>) => {
+  handler: async (accessor, { node, tree }: IMenuCommandOperation) => {
     const dataSourceService = accessor.get(DataSourceService);
-    dataSourceService.addNode({ key: '', type: DataType.Text }, node.parent, node, 'after');
+    const newNode = dataSourceService.addNode({ name: '', type: DataType.Text }, node.parent, node, 'after');
+    tree?.edit(newNode.id!);
     return true;
   },
 };
 
-interface IEditDoneCommandParams {
-  node: IDataDefinition<DataType>;
+interface IEditCommandParams {
+  node: IDataNode;
   newVal: string;
+  tree: TreeApi<IDataNode>;
 };
 
 export const EditDoneCommand: ICommand = {
@@ -82,9 +85,8 @@ export const EditDoneCommand: ICommand = {
 
   type: CommandType.COMMAND,
 
-  handler: async (accessor, { node, newVal }: IEditDoneCommandParams) => {
+  handler: async (accessor, { node, newVal, tree }: IEditCommandParams) => {
     const dataSourceService = accessor.get(DataSourceService);
-    const dataSourceActionService = accessor.get(DataSourceActionService);
     const notificationService = accessor.get(INotificationService);
 
     if (!newVal) {
@@ -104,7 +106,10 @@ export const EditDoneCommand: ICommand = {
       });
       return false;
     }
-    dataSourceActionService.editDone(node, newVal);
+
+    // don't use tree.submit(node.id!, newVal)，will lost level 1 node
+    node.name = newVal;
+    tree.reset();
     return true;
   },
 };
@@ -114,19 +119,20 @@ export const EditCancelCommand: ICommand = {
 
   type: CommandType.COMMAND,
 
-  handler: async (accessor, node: IDataDefinition<DataType>) => {
+  handler: async (accessor, { node, tree }: IEditCommandParams) => {
     const dataSourceService = accessor.get(DataSourceService);
-    const dataSourceActionService = accessor.get(DataSourceActionService);
-    dataSourceActionService.changeToNormal();
-    if (!node.key) {
+    if (!node.name) {
       dataSourceService.removeNode(node);
+    } else {
+      tree.reset();
     }
     return true;
   },
 };
 
 interface ISwitchNodeTypeCommandParams {
-  node: IDataDefinition<DataType>;
+  node: IDataNode;
+  tree: TreeApi<IDataNode>;
   newType: DataType;
 };
 
@@ -137,6 +143,35 @@ export const SwitchNodeTypeCommand: ICommand = {
   handler: async (accessor, { node, newType }: ISwitchNodeTypeCommandParams) => {
     const dataSourceService = accessor.get(DataSourceService);
     dataSourceService.changeType(node, newType);
+
+    return true;
+  },
+};
+
+interface IMoveNodeCommandParams {
+  parent: IDataNode<ReferenceDataType>;
+  moveNodes: IDataNode[];
+  index: number;
+};
+
+export const MoveNodeCommand: ICommand = {
+  id: 'data-form.command.move-node',
+  type: CommandType.COMMAND,
+
+  handler: async (accessor, { parent, moveNodes, index }: IMoveNodeCommandParams) => {
+    const dataSourceService = accessor.get(DataSourceService);
+    const notificationService = accessor.get(INotificationService);
+    const duplicateNode = dataSourceService.getMoveDuplicate(moveNodes, parent);
+    if (duplicateNode) {
+      notificationService.show({
+        type: 'error',
+        title: '提示',
+        content: `移动节点失败，存在同名节点 [${duplicateNode.name}]`,
+      });
+      return false;
+    }
+
+    dataSourceService.moveNodes(moveNodes, index, parent);
     return true;
   },
 };

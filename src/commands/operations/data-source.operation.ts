@@ -18,8 +18,7 @@ import type { IOperation } from '@univerjs/core';
 import type { IAccessor } from '@wendellhu/redi';
 import { CommandType } from '@univerjs/core';
 import { DataSourcePanelService } from '@/services/data-source-panel.service';
-import type { DataType, IDataDefinition } from '@/models/data-source.model';
-import { DataSourceActionService } from '@/services/data-source-action.service';
+import type { IMenuCommandOperation } from '@/common/types';
 
 export const ToggleDataSourcePanelOperation: IOperation = {
   type: CommandType.OPERATION,
@@ -33,8 +32,8 @@ export const ToggleDataSourcePanelOperation: IOperation = {
 export const EditDataOperation: IOperation = {
   type: CommandType.OPERATION,
   id: 'data-form.operation.edit-data',
-  handler: (accessor: IAccessor, node: IDataDefinition<DataType>) => {
-    accessor.get(DataSourceActionService).changeToEditing(node);
+  handler: (_: IAccessor, { node, tree }: IMenuCommandOperation) => {
+    tree.edit(node.id!);
     return true;
   },
 };

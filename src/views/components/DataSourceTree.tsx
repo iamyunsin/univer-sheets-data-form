@@ -14,40 +14,37 @@
  * limitations under the License.
  */
 
-import type { SyntheticEvent } from 'react';
-import React, { useEffect, useRef, useState } from 'react';
+import type { CSSProperties, SyntheticEvent } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Tree } from 'react-arborist';
-import type { DragPreviewProps, NodeRendererProps } from 'react-arborist';
+import type { DragPreviewProps, MoveHandler, NodeRendererProps, TreeApi } from 'react-arborist';
 import { DefaultContainer } from 'react-arborist/dist/module/components/default-container';
 import { useTreeApi } from 'react-arborist/dist/module/context';
-import type { DragDropManager } from 'dnd-core';
-import { createDragDropManager } from 'dnd-core';
+import { createDragDropManager, type DragDropManager } from 'dnd-core';
 import { useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import { useDependency } from '@wendellhu/redi/react-bindings';
-import { Dropdown, Input, useObservable } from '@univerjs/design';
+import { Dropdown, Input } from '@univerjs/design';
 import { ICommandService } from '@univerjs/core';
+import type { TreeProps } from 'react-arborist/dist/module/types/tree-props';
 import { DataSourceIcon } from './DataSourceIcon';
 import { OperationIconButton } from './OperationIconButton';
 import { Icon, IconType } from './Icon';
 import styles from './index.module.less';
 import { TreeNodeContextMenu } from './DataSourceTreeContextMenu';
-import { DataType } from '@/models/data-source.model';
-import type { IDataDefinition, IDataSourceNode } from '@/models/data-source.model';
+import type { IDataNode } from '@/models/data-source.model';
 import { DataSourceService } from '@/services/data-source.service';
-import { DataSourceActionService } from '@/services/data-source-action.service';
-import { AddSubnodeCommand, EditCancelCommand, EditDoneCommand } from '@/commands/commands/data-source.command';
+import { AddSubnodeCommand, EditCancelCommand, EditDoneCommand, MoveNodeCommand } from '@/commands/commands/data-source.command';
 
-interface ITreeNodeProps {
-  onSetHeight: (height: number) => void;
+type TreeContainerReadyHandler = (options: { height: number }) => void;
+interface ITreeContainerProps {
+  onReady: TreeContainerReadyHandler;
 }
 
-function TreeContainer(props: ITreeNodeProps) {
-  const tree = useTreeApi<IDataDefinition<DataType>>();
-  const actionService = useDependency<DataSourceActionService>(DataSourceActionService);
-  actionService.setTree(tree);
+const TreeContainer = memo(function TreeContainer(props: ITreeContainerProps) {
+  const tree = useTreeApi<IDataNode>();
 
   const [_, drop] = useDrop(() => ({
     accept: 'NODE',
@@ -67,9 +64,14 @@ function TreeContainer(props: ITreeNodeProps) {
     const containerEl = tagDiv.current.closest('.univer-app-container-wrapper')!;
     const sheetEl = containerEl.firstElementChild;
     drop(sheetEl);
-    props.onSetHeight(tagDiv.current.offsetHeight);
+
+    props.onReady({
+      height: tagDiv.current.offsetHeight,
+    });
     new ResizeObserver(() => {
-      tagDiv.current && props.onSetHeight(tagDiv.current.offsetHeight);
+      tagDiv.current && props.onReady({
+        height: tagDiv.current.offsetHeight,
+      });
     }).observe(tagDiv.current);
   });
 
@@ -79,7 +81,7 @@ function TreeContainer(props: ITreeNodeProps) {
       <DefaultContainer />
     </>
   );
-}
+});
 
 function DragPreview(props: DragPreviewProps) {
   const { x = 0, y = 0 } = props.offset || {};
@@ -110,87 +112,160 @@ export function DataSourceTree() {
   const dndManager: DragDropManager = createDragDropManager(HTML5Backend);
   const dataSourceService = useDependency(DataSourceService);
   const commandService = useDependency(ICommandService);
+  const tree = useRef<TreeApi<IDataNode>>(null);
 
-  const dataNodes = useObservable(dataSourceService.dataNodes$, true);
+  const dataNodes = dataSourceService.dataNodes$.getValue();
 
-  const addNode = (node: IDataSourceNode<DataType>) => {
-    commandService.executeCommand(AddSubnodeCommand.id, node);
+  const moveNodeHandler: MoveHandler<IDataNode> = (options) => {
+    commandService.executeCommand(MoveNodeCommand.id, {
+      parent: options.parentNode && options.parentNode.data,
+      moveNodes: options.dragNodes.map((node) => node.data),
+      index: options.index,
+
+    });
   };
 
   const [height, setHeight] = useState(500);
+
+  const onTreeContainerReady: TreeContainerReadyHandler = useCallback(({
+    height,
+  }) => {
+    setHeight(height);
+  }, []);
+
+  const renderContainer = () => <TreeContainer onReady={onTreeContainerReady} />;
+
+  const treeProps: TreeProps<IDataNode> = {
+    className: styles.dataSourceTree,
+    onMove: moveNodeHandler,
+    openByDefault: false,
+    data: dataNodes,
+    width: 'auto',
+    height,
+    indent: 24,
+    rowHeight: 36,
+    paddingTop: 10,
+    paddingBottom: 10,
+    disableEdit: true,
+    renderDragPreview: DragPreview,
+    dndManager,
+    renderContainer,
+    children: EditableTreeNode,
+  };
+
+  dataSourceService.dataNodes$.subscribe(() => {
+    if (!tree.current) return;
+    tree.current.update({
+      ...treeProps,
+      data: dataSourceService.dataNodes$.getValue(),
+    });
+  });
+
+  const addNode = () => {
+    commandService.executeCommand(AddSubnodeCommand.id, { tree: tree?.current });
+  };
 
   return (
     <div className={styles.dataSourceTreeContainer}>
       <div className={styles.dataSourceOperationContainer}>
         <span>数据源</span>
-        <OperationIconButton title="data-source-panel.operation.add" iconType={IconType.Add} onClick={() => addNode({ type: DataType.Date, key: '' })} />
+        <OperationIconButton title="data-source-panel.operation.add" iconType={IconType.Add} onClick={() => addNode()} />
       </div>
       <div className={styles.dataSourceTreeWrapper}>
         <Tree
-          className={styles.dataSourceTree}
-            // data={dataNodes}
-          initialData={dataNodes}
-          width="auto"
-          height={height}
-          indent={24}
-          rowHeight={36}
-          paddingTop={10}
-          paddingBottom={10}
-          disableEdit
-          renderDragPreview={DragPreview}
-          dndManager={dndManager}
-          renderContainer={() => <TreeContainer onSetHeight={setHeight} />}
+          ref={tree}
+          {...treeProps}
         >
-          {EditableTreeNode}
         </Tree>
       </div>
     </div>
   );
 }
 
-interface IEditableTreeNodeProps {
-  data: IDataDefinition<DataType>;
+interface IEditableNodeProps {
+  data: IDataNode;
+  isSelected: boolean;
+  isOpen: boolean;
+  isEditing: boolean;
+  isLeaf: boolean;
+  style: CSSProperties;
+  dragHandle?: (el: HTMLDivElement) => void;
+  toggle: () => void;
 }
 
-function EditableTreeNode(props: NodeRendererProps<IDataDefinition<DataType>>) {
-  const { node, style, dragHandle } = props;
-  const { data } = node;
+const EditableNode = memo(function EditableNode(props: IEditableNodeProps) {
+  const { data, isSelected, isOpen, isEditing, isLeaf, style, dragHandle, toggle } = props;
 
   const openClose = (event: SyntheticEvent<HTMLElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    node.toggle();
+    toggle();
   };
 
   return (
-    <div className={`${styles.editableNode} ${node.isSelected ? styles.editableNodeSelected : ''}`} style={style} ref={dragHandle}>
-      { !node.isLeaf && (
+    <div className={`${styles.editableNode} ${isSelected ? styles.editableNodeSelected : ''}`} style={style} ref={dragHandle}>
+      { !isLeaf && (
         <i className={styles.editableNodeOpenClose} onClick={openClose}>
-          {node.isOpen ? <Icon type={IconType.Expand} /> : <Icon type={IconType.Collapse} />}
+          {isOpen ? <Icon type={IconType.Expand} /> : <Icon type={IconType.Collapse} />}
         </i>
       )}
       <div className={styles.editableNodeTitle}>
         <DataSourceIcon type={data.type} />
-        {node.isEditing ? <EditingNode data={data} /> : <NormalNode data={data} />}
+        {isEditing ? <EditingNode data={data} /> : <NormalNode data={data} />}
       </div>
     </div>
+  );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.data.name === nextProps.data.name
+    && prevProps.isSelected === nextProps.isSelected
+    && prevProps.isOpen === nextProps.isOpen
+    && prevProps.isEditing === nextProps.isEditing
+    && prevProps.isLeaf === nextProps.isLeaf
+    && prevProps.style.paddingLeft === nextProps.style.paddingLeft
+  );
+});
+
+interface IEditableTreeNodeProps {
+  data: IDataNode;
+}
+
+function EditableTreeNode(props: NodeRendererProps<IDataNode>) {
+  const { node, style, dragHandle } = props;
+  const { data } = node;
+
+  const openClose = () => {
+    node.toggle();
+  };
+
+  return (
+    <EditableNode
+      data={data}
+      isEditing={node.isEditing}
+      isSelected={node.isSelected}
+      isLeaf={node.isLeaf}
+      isOpen={node.isOpen}
+      style={style}
+      dragHandle={dragHandle}
+      toggle={openClose}
+    />
   );
 };
 
 function EditingNode(props: IEditableTreeNodeProps) {
   const { data } = props;
-  const [value, setValue] = useState(data.key);
+  const [value, setValue] = useState(data.name);
   const commandService = useDependency(ICommandService);
+  const tree = useTreeApi();
 
   const handleOk = (event: SyntheticEvent) => {
     event.stopPropagation();
-    commandService.executeCommand(EditDoneCommand.id, { node: data, newVal: value });
+    commandService.executeCommand(EditDoneCommand.id, { node: data, newVal: value, tree });
   };
 
   const handleCancel = (event: SyntheticEvent) => {
     event.stopPropagation();
-    setValue(data.key);
-    commandService.executeCommand(EditCancelCommand.id, data);
+    commandService.executeCommand(EditCancelCommand.id, { node: data, newVal: value, tree });
   };
 
   return (
@@ -221,7 +296,7 @@ function NormalNode(props: IEditableTreeNodeProps) {
       )}
       onVisibleChange={setMenuVisible}
     >
-      <span>{data.key}</span>
+      <span>{data.name}</span>
     </Dropdown>
   );
 }

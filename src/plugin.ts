@@ -18,14 +18,13 @@ import { LocaleService, Plugin, PluginType } from '@univerjs/core';
 import { type Dependency, Inject, Injector } from '@wendellhu/redi';
 import * as locale from './locale';
 import { DATA_FORM_PLUGIN_NAME } from './common/plugin-name';
-import type { DataType, IDataSourceNode } from './models/data-source.model';
+import type { DataType, IDataNode } from './models/data-source.model';
 import { DataSourceController } from './controllers/data-source.controller';
 import { DataSourcePanelService } from './services/data-source-panel.service';
 import { DataSourceService } from './services/data-source.service';
-import { DataSourceActionService } from './services/data-source-action.service';
 
 export interface IDataFormPluginConfig {
-  dataSourceNodes: IDataSourceNode<DataType>[];
+  dataSource: IDataNode<DataType>[];
 }
 
 export class UniverSheetsDataFormPlugin extends Plugin {
@@ -46,19 +45,10 @@ export class UniverSheetsDataFormPlugin extends Plugin {
 
       // services
       [DataSourcePanelService],
-      [DataSourceService, { useFactory: () => injector.createInstance(DataSourceService, this._config.dataSourceNodes) }],
-      [DataSourceActionService],
+      [DataSourceService, { useFactory: () => injector.createInstance(DataSourceService, this._config.dataSource) }],
     ];
 
     dependencies.forEach((d) => injector.add(d));
     this._localeService.load(locale);
-
-    this._initDataSourceNodes();
-  }
-
-  private _initDataSourceNodes() {
-    if (this._config?.dataSourceNodes) {
-      // TODO: Set data source nodes to DataSourceService
-    }
   }
 }
