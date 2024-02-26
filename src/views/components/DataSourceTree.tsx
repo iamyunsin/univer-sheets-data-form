@@ -21,7 +21,8 @@ import { Tree } from 'react-arborist';
 import type { DragPreviewProps, MoveHandler, NodeApi, NodeRendererProps, TreeApi } from 'react-arborist';
 import { DefaultContainer } from 'react-arborist/dist/module/components/default-container';
 import { useTreeApi } from 'react-arborist/dist/module/context';
-import { createDragDropManager, type DragDropManager } from 'dnd-core';
+import { createDragDropManager } from 'dnd-core';
+import type { DragDropManager, XYCoord } from 'dnd-core';
 import { useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -38,7 +39,12 @@ import type { DataType, IDataNode } from '@/models/data-source.model';
 import { DataSourceService } from '@/services/data-source.service';
 import { AddSubnodeCommand, EditCancelCommand, EditDoneCommand, MoveNodeCommand } from '@/commands/commands/data-source.command';
 
-type TreeContainerReadyHandler = (options: { height: number }) => void;
+type TreeContainerReadyHandler = (options: {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+}) => void;
 interface ITreeContainerProps {
   onReady: TreeContainerReadyHandler;
 }
@@ -67,10 +73,17 @@ const TreeContainer = memo(function TreeContainer(props: ITreeContainerProps) {
 
     props.onReady({
       height: tagDiv.current.offsetHeight,
+      width: tagDiv.current.offsetWidth,
+      x: tagDiv.current.offsetLeft,
+      y: tagDiv.current.offsetTop,
     });
     new ResizeObserver(() => {
+      const rect = tagDiv.current!.getBoundingClientRect();
       tagDiv.current && props.onReady({
-        height: tagDiv.current.offsetHeight,
+        height: rect.height,
+        width: rect.width,
+        x: rect.left || rect.x,
+        y: rect.top || rect.y,
       });
     }).observe(tagDiv.current);
   });
@@ -128,7 +141,7 @@ function DragPreview(props: DragPreviewProps) {
 }
 
 export function DataSourceTree() {
-  const dndManager: DragDropManager = createDragDropManager(HTML5Backend);
+  const dndManager: DragDropManager = createDragDropManager(HTML5Backend, undefined, undefined, true);
   const dataSourceService = useDependency(DataSourceService);
   const commandService = useDependency(ICommandService);
   const tree = useRef<TreeApi<IDataNode>>(null);
@@ -140,27 +153,54 @@ export function DataSourceTree() {
       parent: options.parentNode && options.parentNode.data,
       moveNodes: options.dragNodes.map((node) => node.data),
       index: options.index,
-
     });
   };
 
-  const [height, setHeight] = useState(500);
+  const containerInfo = {
+    width: 200,
+    height: 500,
+    x: 0,
+    y: 0,
+  };
 
   const onTreeContainerReady: TreeContainerReadyHandler = useCallback(({
     height,
+    width,
+    x,
+    y,
   }) => {
-    setHeight(height);
-  }, []);
+    containerInfo.height = height;
+    containerInfo.width = width;
+    containerInfo.x = x;
+    containerInfo.y = y;
+    updateTree();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderContainer = () => <TreeContainer onReady={onTreeContainerReady} />;
 
+  const dndOffset: XYCoord = {
+    x: 0,
+    y: 0,
+  };
+
+  // monitor drag pointer
+  dndManager.getMonitor().subscribeToOffsetChange(() => {
+    const _dndOffset = dndManager.getMonitor().getClientOffset();
+    if (!_dndOffset || (_dndOffset.x === 0 && _dndOffset.y === 0)) return;
+    Object.assign(dndOffset, _dndOffset);
+  });
+
   const treeProps: TreeProps<IDataNode> = {
     className: styles.dataSourceTree,
+    disableDrop() {
+      // drag into worksheet and disable drop into tree
+      return dndOffset.x < containerInfo.x - 20;
+    },
     onMove: moveNodeHandler,
     openByDefault: false,
     data: dataNodes,
     width: 'auto',
-    height,
+    height: containerInfo.height,
     indent: 24,
     rowHeight: 30,
     paddingTop: 10,
@@ -172,13 +212,16 @@ export function DataSourceTree() {
     children: EditableTreeNode,
   };
 
-  dataSourceService.dataNodes$.subscribe(() => {
+  const updateTree = () => {
     if (!tree.current) return;
     tree.current.update({
       ...treeProps,
+      height: containerInfo.height,
       data: dataSourceService.dataNodes$.getValue(),
     });
-  });
+  };
+
+  dataSourceService.dataNodes$.subscribe(updateTree);
 
   const addNode = () => {
     commandService.executeCommand(AddSubnodeCommand.id, { tree: tree?.current });
