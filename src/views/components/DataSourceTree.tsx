@@ -78,8 +78,9 @@ const TreeContainer = memo(function TreeContainer(props: ITreeContainerProps) {
       y: tagDiv.current.offsetTop,
     });
     new ResizeObserver(() => {
+      if (!tagDiv.current) return;
       const rect = tagDiv.current!.getBoundingClientRect();
-      tagDiv.current && props.onReady({
+      props.onReady({
         height: rect.height,
         width: rect.width,
         x: rect.left || rect.x,
