@@ -107,3 +107,30 @@
     }
   }
 }
+
+/** drag preview */
+.drag-preview {
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: rgba(#fff, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  pointer-events: none;
+  display: none;
+  z-index: 10;
+
+  &-item {
+    min-width: 200px;
+    width: max-content;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 30px;
+    line-height: 30px;
+
+    &-title {
+      flex: 1;
+    }
+  }
+}

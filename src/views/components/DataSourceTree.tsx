@@ -108,14 +108,6 @@ function DragPreview(props: DragPreviewProps) {
   }
 
   const [style, setStyle] = useState<React.CSSProperties>({
-    position: 'fixed',
-    left: 0,
-    top: 0,
-    background: '#fff',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-    minWidth: 200,
-    pointerEvents: 'none',
-    zIndex: 10,
   });
 
   useEffect(() => {
@@ -130,11 +122,11 @@ function DragPreview(props: DragPreviewProps) {
   }, [x, y]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div ref={previewRef} style={style}>
+    <div className={styles.dragPreview} ref={previewRef} style={style}>
       {nodes.map((node: NodeApi<IDataNode<DataType>>) => (
-        <div key={node.id} style={{ height: '30px', lineHeight: '30px' }}>
+        <div className={styles.dragPreviewItem} key={node.id}>
           <DataSourceIcon type={node.data.type} />
-          {node.data.name}
+          <span className={styles.dragPreviewItemTitle}>{node.data.name}</span>
         </div>
       ))}
     </div>
