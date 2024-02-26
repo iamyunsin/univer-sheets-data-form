@@ -18,7 +18,7 @@ import type { CSSProperties, SyntheticEvent } from 'react';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Tree } from 'react-arborist';
-import type { DragPreviewProps, MoveHandler, NodeRendererProps, TreeApi } from 'react-arborist';
+import type { DragPreviewProps, MoveHandler, NodeApi, NodeRendererProps, TreeApi } from 'react-arborist';
 import { DefaultContainer } from 'react-arborist/dist/module/components/default-container';
 import { useTreeApi } from 'react-arborist/dist/module/context';
 import { createDragDropManager, type DragDropManager } from 'dnd-core';
@@ -34,7 +34,7 @@ import { OperationIconButton } from './OperationIconButton';
 import { Icon, IconType } from './Icon';
 import styles from './index.module.less';
 import { TreeNodeContextMenu } from './DataSourceTreeContextMenu';
-import type { IDataNode } from '@/models/data-source.model';
+import type { DataType, IDataNode } from '@/models/data-source.model';
 import { DataSourceService } from '@/services/data-source.service';
 import { AddSubnodeCommand, EditCancelCommand, EditDoneCommand, MoveNodeCommand } from '@/commands/commands/data-source.command';
 
@@ -86,12 +86,22 @@ const TreeContainer = memo(function TreeContainer(props: ITreeContainerProps) {
 function DragPreview(props: DragPreviewProps) {
   const { x = 0, y = 0 } = props.offset || {};
   const previewRef = useRef<HTMLDivElement>(null);
+  const tree = useTreeApi<IDataNode>();
+  const nodes = tree.selectedNodes.some((node) => node.id === props.id) ? [...tree.selectedNodes] : [tree.get(props.id)!];
+
+  if (!nodes[0]) {
+    nodes.shift();
+  }
+
   const [style, setStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     left: 0,
     top: 0,
+    background: '#fff',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+    minWidth: 200,
+    pointerEvents: 'none',
     zIndex: 10,
-    color: 'red',
   });
 
   useEffect(() => {
@@ -105,7 +115,16 @@ function DragPreview(props: DragPreviewProps) {
     setStyle(newStyle);
   }, [x, y]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <div ref={previewRef} style={style}>好好的</div>;
+  return (
+    <div ref={previewRef} style={style}>
+      {nodes.map((node: NodeApi<IDataNode<DataType>>) => (
+        <div key={node.id} style={{ height: '30px', lineHeight: '30px' }}>
+          <DataSourceIcon type={node.data.type} />
+          {node.data.name}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function DataSourceTree() {
