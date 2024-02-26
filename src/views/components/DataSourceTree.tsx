@@ -143,7 +143,7 @@ export function DataSourceTree() {
     width: 'auto',
     height,
     indent: 24,
-    rowHeight: 36,
+    rowHeight: 30,
     paddingTop: 10,
     paddingBottom: 10,
     disableEdit: true,
