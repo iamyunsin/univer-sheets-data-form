@@ -19,11 +19,9 @@ import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Tree } from 'react-arborist';
 import type { DragPreviewProps, MoveHandler, NodeApi, NodeRendererProps, TreeApi } from 'react-arborist';
-import { DefaultContainer } from 'react-arborist/dist/module/components/default-container';
 import { useTreeApi } from 'react-arborist/dist/module/context';
 import { createDragDropManager } from 'dnd-core';
 import type { DragDropManager, XYCoord } from 'dnd-core';
-import { useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import { useDependency } from '@wendellhu/redi/react-bindings';
@@ -35,67 +33,11 @@ import { OperationIconButton } from './OperationIconButton';
 import { Icon, IconType } from './Icon';
 import styles from './index.module.less';
 import { TreeNodeContextMenu } from './DataSourceTreeContextMenu';
+import type { TreeContainerReadyHandler } from './DataSourceTreeContainer';
+import { TreeContainer } from './TreeContainer';
 import type { DataType, IDataNode } from '@/models/data-source.model';
 import { DataSourceService } from '@/services/data-source.service';
 import { AddSubnodeCommand, EditCancelCommand, EditDoneCommand, MoveNodeCommand } from '@/commands/commands/data-source.command';
-
-type TreeContainerReadyHandler = (options: {
-  height: number;
-  width: number;
-  x: number;
-  y: number;
-}) => void;
-interface ITreeContainerProps {
-  onReady: TreeContainerReadyHandler;
-}
-
-const TreeContainer = memo(function TreeContainer(props: ITreeContainerProps) {
-  const tree = useTreeApi<IDataNode>();
-
-  const [_, drop] = useDrop(() => ({
-    accept: 'NODE',
-    canDrop: () => {
-      return true;
-    },
-    hover: () => {
-    },
-    drop: () => {
-    },
-  }), [tree]);
-
-  const tagDiv = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!tagDiv.current || !tagDiv.current.parentElement) return;
-    const containerEl = tagDiv.current.closest('.univer-app-container-wrapper')!;
-    const sheetEl = containerEl.firstElementChild;
-    drop(sheetEl);
-
-    props.onReady({
-      height: tagDiv.current.offsetHeight,
-      width: tagDiv.current.offsetWidth,
-      x: tagDiv.current.offsetLeft,
-      y: tagDiv.current.offsetTop,
-    });
-    new ResizeObserver(() => {
-      if (!tagDiv.current) return;
-      const rect = tagDiv.current!.getBoundingClientRect();
-      props.onReady({
-        height: rect.height,
-        width: rect.width,
-        x: rect.left || rect.x,
-        y: rect.top || rect.y,
-      });
-    }).observe(tagDiv.current);
-  });
-
-  return (
-    <>
-      <div ref={tagDiv} style={{ position: 'absolute', top: 0, bottom: 0, zIndex: -1, visibility: 'hidden' }}></div>
-      <DefaultContainer />
-    </>
-  );
-});
 
 function DragPreview(props: DragPreviewProps) {
   const { x = 0, y = 0 } = props.offset || {};
