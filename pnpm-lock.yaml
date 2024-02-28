@@ -14,6 +14,9 @@ dependencies:
   '@univerjs/design':
     specifier: 0.1.0-beta.5
     version: 0.1.0-beta.5(react-dom@18.2.0)(react@18.2.0)(rxjs@7.8.1)
+  '@univerjs/facade':
+    specifier: 0.1.0-beta.5
+    version: 0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@univerjs/network@0.1.0-beta.5)(@univerjs/sheets-formula@0.1.0-beta.5)(@univerjs/sheets-numfmt@0.1.0-beta.5)(@univerjs/sheets@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(rxjs@7.8.1)
   '@univerjs/icons':
     specifier: ^0.1.29
     version: 0.1.29(react-dom@18.2.0)(react@18.2.0)
@@ -1650,7 +1653,6 @@ packages:
       '@univerjs/engine-render': 0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(rxjs@7.8.1)
       '@wendellhu/redi': 0.12.13
       rxjs: 7.8.1
-    dev: true
 
   /@univerjs/engine-formula@0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(rxjs@7.8.1):
     resolution: {integrity: sha512-pG9AM06ZOOZxXkMMuInlordCwSBqMt84Me24OgjXacmiRVCeHwjcBhcjDzjxNvFW8gyN9ZJIWYsEHIs0jt0qOQ==}
@@ -1664,14 +1666,12 @@ packages:
       '@wendellhu/redi': 0.12.13
       big.js: 6.2.1
       rxjs: 7.8.1
-    dev: true
 
   /@univerjs/engine-numfmt@0.1.0-beta.5:
     resolution: {integrity: sha512-8n7lI/OIKJTGHkI0fdJCOkJVnmp+ssyHknKW96MPYSN303vxU45uGb32bJX0+3jizoE+urSyK2G5XIAO3QGaBg==}
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
     dependencies:
       numfmt: 2.5.2
-    dev: true
 
   /@univerjs/engine-render@0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(rxjs@7.8.1):
     resolution: {integrity: sha512-bSFogwRIdmtmx3/iY9EHgLxC3jvJZPB/iY1o85a782GF4aRtFt3AF13OMuqC/qnhSY5e7PuWBADlkq2XruyyIw==}
@@ -1706,7 +1706,6 @@ packages:
       '@univerjs/sheets-numfmt': 0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@univerjs/design@0.1.0-beta.5)(@univerjs/engine-formula@0.1.0-beta.5)(@univerjs/engine-numfmt@0.1.0-beta.5)(@univerjs/engine-render@0.1.0-beta.5)(@univerjs/sheets-ui@0.1.0-beta.5)(@univerjs/sheets@0.1.0-beta.5)(@univerjs/ui@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(react-dom@18.2.0)(react@18.2.0)(rxjs@7.8.1)
       '@wendellhu/redi': 0.12.13
       rxjs: 7.8.1
-    dev: true
 
   /@univerjs/icons@0.1.29(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-0mwkjQLTObOdAQGBxvl/03uV72EqS8UCbIMrGcYBoVa+ev5CsbhX2G72a2O9+FIqfsXJnNvDgfrZ9ZcI0KeVkQ==}
@@ -1728,7 +1727,6 @@ packages:
       '@univerjs/core': 0.1.0-beta.5(@wendellhu/redi@0.12.13)(rxjs@7.8.1)
       '@wendellhu/redi': 0.12.13
       rxjs: 7.8.1
-    dev: true
 
   /@univerjs/rpc@0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(rxjs@7.8.1):
     resolution: {integrity: sha512-N/9kY5A5xgC/rNMo1O56QUawjySzABLDSMp4N9GwOtEjlAXxm7fH30qF/4HIgnSXBeKgr80JdvoVv9kz5ip6LQ==}
@@ -1775,7 +1773,6 @@ packages:
       rxjs: 7.8.1
     transitivePeerDependencies:
       - react-dom
-    dev: true
 
   /@univerjs/sheets-numfmt@0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@univerjs/design@0.1.0-beta.5)(@univerjs/engine-formula@0.1.0-beta.5)(@univerjs/engine-numfmt@0.1.0-beta.5)(@univerjs/engine-render@0.1.0-beta.5)(@univerjs/sheets-ui@0.1.0-beta.5)(@univerjs/sheets@0.1.0-beta.5)(@univerjs/ui@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(react-dom@18.2.0)(react@18.2.0)(rxjs@7.8.1):
     resolution: {integrity: sha512-qHfy70jo4Azot4gUlKvu5Csl0bZAV14WWbeZmtwjUVKiDcqLmFoBtm67kescVr11UY73QDZ4R4pUElH+ONtAZg==}
@@ -1807,7 +1804,6 @@ packages:
       rxjs: 7.8.1
     transitivePeerDependencies:
       - react-dom
-    dev: true
 
   /@univerjs/sheets-ui@0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@univerjs/design@0.1.0-beta.5)(@univerjs/docs@0.1.0-beta.5)(@univerjs/engine-formula@0.1.0-beta.5)(@univerjs/engine-numfmt@0.1.0-beta.5)(@univerjs/engine-render@0.1.0-beta.5)(@univerjs/sheets@0.1.0-beta.5)(@univerjs/ui@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(clsx@2.1.0)(react-dom@18.2.0)(react@18.2.0)(rxjs@7.8.1):
     resolution: {integrity: sha512-O6soXG2q5E7liVfGrNh2BdMZ3QkXJU4etJUYXlkW2lG4/9dygh49T0zYHJ4guCiJIEGfM5EJaCtUlFu+DJ56Tg==}
@@ -1841,7 +1837,6 @@ packages:
       rxjs: 7.8.1
     transitivePeerDependencies:
       - react-dom
-    dev: true
 
   /@univerjs/sheets@0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@univerjs/engine-formula@0.1.0-beta.5)(@univerjs/engine-render@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(rxjs@7.8.1):
     resolution: {integrity: sha512-QQSLXvZLBmUy8WHesSn/SljP2qk0hkeWIAkQ4+hx5V4z6DPBd6Z8d3M7WfI8APZGIv09UvSbKGGg3IYcAcK52w==}
@@ -1858,7 +1853,6 @@ packages:
       '@univerjs/engine-render': 0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(rxjs@7.8.1)
       '@wendellhu/redi': 0.12.13
       rxjs: 7.8.1
-    dev: true
 
   /@univerjs/ui@0.1.0-beta.5(@univerjs/core@0.1.0-beta.5)(@univerjs/design@0.1.0-beta.5)(@univerjs/engine-render@0.1.0-beta.5)(@wendellhu/redi@0.12.13)(clsx@2.1.0)(react-dom@18.2.0)(react@18.2.0)(rxjs@7.8.1):
     resolution: {integrity: sha512-dZ2u46SAPf0J9K//B9eWbxRpHGQEyH1zv5ETiCd73B6YZBSAg7+dsmDh4IGlwUS2yTpJnuVvfXEifSrwva6AXw==}
@@ -2274,7 +2268,6 @@ packages:
 
   /big.js@6.2.1:
     resolution: {integrity: sha512-bCtHMwL9LeDIozFn+oNhhFoq+yQ3BNdnsLSASUxLciOb1vgvpHsIO1dsENiGMgbb4SkP5TrzWzRiLddn8ahVOQ==}
-    dev: true
 
   /boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
@@ -4851,7 +4844,6 @@ packages:
 
   /numfmt@2.5.2:
     resolution: {integrity: sha512-VXrB2bpU9Xa0oCHq8IsqE2CcUx5OLupLC3oryFT4DB9e/xe+OnUzBndhXfNHUzxFE4DYI3Sx4OtzS1Sdaf7tEw==}
-    dev: true
 
   /object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}

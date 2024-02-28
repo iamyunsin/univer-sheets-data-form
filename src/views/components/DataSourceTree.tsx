@@ -34,7 +34,7 @@ import { Icon, IconType } from './Icon';
 import styles from './index.module.less';
 import { TreeNodeContextMenu } from './DataSourceTreeContextMenu';
 import type { TreeContainerReadyHandler } from './DataSourceTreeContainer';
-import { TreeContainer } from './TreeContainer';
+import { TreeContainer } from './DataSourceTreeContainer';
 import type { DataType, IDataNode } from '@/models/data-source.model';
 import { DataSourceService } from '@/services/data-source.service';
 import { AddSubnodeCommand, EditCancelCommand, EditDoneCommand, MoveNodeCommand } from '@/commands/commands/data-source.command';

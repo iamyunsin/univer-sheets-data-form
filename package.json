@@ -57,6 +57,7 @@
   "peerDependencies": {
     "@univerjs/core": "*",
     "@univerjs/design": "*",
+    "@univerjs/facade": "*",
     "@univerjs/ui": "*",
     "@wendellhu/redi": ">=0.12.13",
     "clsx": ">=2.0.0",
@@ -71,6 +72,7 @@
     "@types/react-dom": "^18.2.19",
     "@univerjs/core": "0.1.0-beta.5",
     "@univerjs/design": "0.1.0-beta.5",
+    "@univerjs/facade": "0.1.0-beta.5",
     "@univerjs/icons": "^0.1.29",
     "@univerjs/ui": "0.1.0-beta.5",
     "@wendellhu/redi": "^0.12.13",
