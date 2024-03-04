@@ -39,9 +39,11 @@ export type ReferenceDataType = DataType.Table | DataType.Namespace;
 
 export type Name = string;
 
+export type DataNodeId = string;
+
 /** 数据源节点定义 */
 export interface IDataNode<T extends DataType = DataType> {
-  id?: string;
+  id?: DataNodeId;
   /** 节点类型 */
   type: T;
   /** 类型键，同级唯一 */
@@ -55,6 +57,7 @@ export interface IDataNode<T extends DataType = DataType> {
 export interface IDataSource {
   getNodes: () => IDataNode[];
   setNodes: (nodes: IDataNode[]) => void;
+  getById: (id: string) => IDataNode | null;
 }
 
 /** 数据源 */
@@ -71,6 +74,23 @@ export class DataSource implements IDataSource {
 
   getNodes(): IDataNode[] {
     return this._nodes;
+  }
+
+  getById(id: string): IDataNode | null {
+    return this._getNodeById(this._nodes, id);
+  }
+
+  private _getNodeById(nodes: IDataNode[], id: string): IDataNode | null {
+    for (const node of nodes) {
+      if (node.id === id) {
+        return node;
+      }
+      if (node.children) {
+        const child = this._getNodeById(node.children, id);
+        if (child) return child;
+      }
+    }
+    return null;
   }
 
   toJSON() {
@@ -132,6 +152,10 @@ export function isReferenceType(type: DataType): type is ReferenceDataType {
 
 export function isNamespace(node?: IDataNode): node is IDataNode<DataType.Namespace> {
   return !!node && node.type === DataType.Namespace;
+}
+
+export function isDate(node?: IDataNode): node is IDataNode<DataType.Date> {
+  return !!node && node.type === DataType.Date;
 }
 
 export function haveChildren(node: IDataNode): boolean {

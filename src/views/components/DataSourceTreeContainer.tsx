@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { memo, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { DefaultContainer } from 'react-arborist/dist/module/components/default-container';
 import { useTreeApi } from 'react-arborist/dist/module/context';
 import type { DropTargetMonitor } from 'react-dnd';
@@ -24,7 +24,10 @@ import { ICommandService, ILogService, IUniverInstanceService } from '@univerjs/
 import { ISelectionRenderService } from '@univerjs/sheets-ui';
 import { DeviceType } from '@univerjs/engine-render';
 import { FRange } from '@univerjs/facade';
+import type { ISetSelectionsOperationParams } from '@univerjs/sheets';
+import { SetSelectionsOperation } from '@univerjs/sheets';
 import type { IDataNode } from '@/models/data-source.model';
+import { DATA_FORM_PLUGIN_NAME } from '@/common/plugin-name';
 
 export type TreeContainerReadyHandler = (options: {
   height: number;
@@ -37,7 +40,7 @@ export interface ITreeContainerProps {
   onReady: TreeContainerReadyHandler;
 }
 
-export const TreeContainer = memo(function TreeContainer(props: ITreeContainerProps) {
+export function TreeContainer(props: ITreeContainerProps) {
   const tree = useTreeApi<IDataNode>();
   const logService = useDependency(ILogService);
   const selectionRenderService = useDependency(ISelectionRenderService);
@@ -50,6 +53,7 @@ export const TreeContainer = memo(function TreeContainer(props: ITreeContainerPr
     canDrop: (item: IDataNode) => {
       const nodes = getDropNodes(item);
       logService.debug('canDrop: ', item, nodes);
+
       return true;
     },
     hover: (_: IDataNode, monitor: DropTargetMonitor) => {
@@ -72,6 +76,28 @@ export const TreeContainer = memo(function TreeContainer(props: ITreeContainerPr
         previousState: undefined,
         currentState: undefined,
       });
+
+      selectionRenderService.endSelection();
+
+      const univerInstanceService = injector.get(IUniverInstanceService);
+      const workbook = univerInstanceService.getCurrentUniverSheetInstance();
+      const worksheet = workbook.getActiveSheet();
+      const activeRange = selectionRenderService.getActiveRange()!;
+
+      injector.get(ICommandService).executeCommand<ISetSelectionsOperationParams>(SetSelectionsOperation.id, {
+        unitId: workbook.getUnitId(),
+        subUnitId: worksheet.getSheetId(),
+        pluginName: DATA_FORM_PLUGIN_NAME,
+        selections: [{
+          range: {
+            ...activeRange,
+            endColumn: activeRange.endColumn + 2,
+            endRow: activeRange.startRow + 2,
+          },
+          primary: null,
+          style: null,
+        }],
+      });
     },
     drop: () => {
       selectionRenderService.endSelection();
@@ -79,41 +105,48 @@ export const TreeContainer = memo(function TreeContainer(props: ITreeContainerPr
       const univerInstanceService = injector.get(IUniverInstanceService);
       const workbook = univerInstanceService.getCurrentUniverSheetInstance();
       const worksheet = workbook.getActiveSheet();
-      activeRange.endColumn += 2;
-      // activeRange.endRow += 2;
-      const tableHeaderRange = new FRange(workbook, worksheet, { ...activeRange }, injector, injector.get(ICommandService));
+      const tableHeaderRange = injector.createInstance(FRange, workbook, worksheet, {
+        ...activeRange,
+        endRow: activeRange.startRow,
+      });
       tableHeaderRange.setBackgroundColor('#0000FF');
       tableHeaderRange.setFontColor('#FFFFFF');
       tableHeaderRange.setFontWeight('bold');
       tableHeaderRange.setValues([['ABC', 'BCD', 'CDA']]);
       activeRange.endRow += 2;
-      const tableRange = new FRange(workbook, worksheet, { ...activeRange }, injector, injector.get(ICommandService));
+      const tableRange = injector.createInstance(FRange, workbook, worksheet, {
+        ...activeRange,
+      });
       tableRange.getCellStyleData();
     },
   }), [tree]);
 
+  const notifyContainerChange = () => {
+    if (!tagDiv.current) return;
+    const rect = tagDiv.current.getBoundingClientRect();
+    props.onReady({
+      height: rect.height,
+      width: rect.width,
+      x: rect.left || rect.x,
+      y: rect.top || rect.y,
+    });
+  };
+
+  const observer = useRef(new ResizeObserver(notifyContainerChange));
+
   useEffect(() => {
-    if (!tagDiv.current || !tagDiv.current.parentElement) return;
+    const tagDivEl = tagDiv.current;
+    const observerInstance = observer.current;
+
+    if (!tagDivEl || !tagDivEl.parentElement) return;
     const containerEl = tagDiv.current.closest('.univer-app-container-wrapper')!;
     const sheetEl = containerEl.firstElementChild;
     drop(sheetEl);
-
-    props.onReady({
-      height: tagDiv.current.offsetHeight,
-      width: tagDiv.current.offsetWidth,
-      x: tagDiv.current.offsetLeft,
-      y: tagDiv.current.offsetTop,
-    });
-    new ResizeObserver(() => {
-      if (!tagDiv.current) return;
-      const rect = tagDiv.current!.getBoundingClientRect();
-      props.onReady({
-        height: rect.height,
-        width: rect.width,
-        x: rect.left || rect.x,
-        y: rect.top || rect.y,
-      });
-    }).observe(tagDiv.current);
+    notifyContainerChange();
+    observerInstance.observe(tagDivEl);
+    return () => {
+      observerInstance.unobserve(tagDivEl);
+    };
   });
 
   return (
@@ -122,4 +155,4 @@ export const TreeContainer = memo(function TreeContainer(props: ITreeContainerPr
       <DefaultContainer />
     </>
   );
-});
+};

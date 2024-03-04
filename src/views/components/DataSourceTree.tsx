@@ -91,24 +91,22 @@ export function DataSourceTree() {
     });
   };
 
-  const containerInfo = {
-    width: 200,
-    height: 500,
+  const containerInfo = useRef({
     x: 0,
     y: 0,
-  };
+    with: 0,
+    height: 800,
+  });
 
   const onTreeContainerReady: TreeContainerReadyHandler = useCallback(({
-    height,
-    width,
     x,
-    y,
+    height,
   }) => {
-    containerInfo.height = height;
-    containerInfo.width = width;
-    containerInfo.x = x;
-    containerInfo.y = y;
-    updateTree();
+    containerInfo.current.x = x;
+    if (height !== containerInfo.current.height) {
+      containerInfo.current.height = height;
+      updateTree();
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderContainer = () => <TreeContainer onReady={onTreeContainerReady} />;
@@ -129,13 +127,13 @@ export function DataSourceTree() {
     className: styles.dataSourceTree,
     disableDrop() {
       // drag into worksheet and disable drop into tree
-      return dndOffset.x < containerInfo.x - 20;
+      return dndOffset.x < containerInfo.current.x - 20;
     },
     onMove: moveNodeHandler,
     openByDefault: false,
+    height: containerInfo.current.height,
     data: dataNodes,
     width: 'auto',
-    height: containerInfo.height,
     indent: 24,
     rowHeight: 30,
     paddingTop: 10,
@@ -149,11 +147,12 @@ export function DataSourceTree() {
 
   const updateTree = () => {
     if (!tree.current) return;
-    tree.current.update({
+    const newProps = {
       ...treeProps,
-      height: containerInfo.height,
+      height: containerInfo.current.height,
       data: dataSourceService.dataNodes$.getValue(),
-    });
+    };
+    tree.current.update(newProps);
   };
 
   dataSourceService.dataNodes$.subscribe(updateTree);
